@@ -15,7 +15,7 @@ import Ankur from "../images/ankur.png"
 import { BiLogoLinkedinSquare } from "react-icons/bi"
 import { Button } from "@/components/ui/button"
 import { Link } from "react-router-dom"
-import { GrMapLocation, GrPhone, GrMail } from "react-icons/gr"
+import { GrMapLocation, GrPhone, GrMail, GrTwitter } from "react-icons/gr"
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel"
 import useAuth from "@/context/authContext"
 import { SiGithub } from "react-icons/si"
@@ -27,32 +27,50 @@ import Navbar from "../components/Navbar"
 import { Check, CheckIcon , CrossIcon, Plus } from "lucide-react"
 import app from '@/assets/app.png'
 import android from '@/assets/android.png'
+import Footer from "../components/Footer"
 
 const Landing = () => {
-  const clerkUser = useUser()
-  const { useAuthlogin } = useAuth()
+  const { user: clerkUser, isSignedIn } = useUser();
+  const { useAuthlogin } = useAuth();
 
-  const clerkLogin = async () => {
-    try {
-      const clearLoggedUserData = {
-        username: clerkUser?.user?.username,
-        email: clerkUser?.user?.primaryEmailAddress.emailAddress,
-        firstName: clerkUser?.user?.firstName,
-        id: clerkUser?.user?.id,
+  useEffect(() => {
+    const handleClerkAuth = async () => {
+      if (isSignedIn && clerkUser) {
+        try {
+          const clearLoggedUserData = {
+            username: clerkUser.username,
+            email: clerkUser.primaryEmailAddress?.emailAddress,
+            firstName: clerkUser.firstName,
+            lastName: clerkUser.lastName,
+            id: clerkUser.id,
+            profileImage: clerkUser.imageUrl,
+            verified: true
+          };
+          
+          const res = await axios.post(
+            `${import.meta.env.VITE_API_URL}/users/clerk-sign`,
+            clearLoggedUserData
+          );
+          
+          if (res.data.success) {
+            useAuthlogin(res.data.user, 'clerk');
+            toast.success(res.data.message);
+          } else {
+            toast.error(res.data.message);
+          }
+        } catch (error) {
+          const { response } = error;
+          if (!response) {
+            toast.error("Database connection error");
+            return;
+          }
+          toast.error(response.data.message);
+        }
       }
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/users/clerk-sign`, clearLoggedUserData)
-      toast.success(res.data.message)
-      useAuthlogin(res.data.user)
-    } catch (error) {
-      const { response } = error
-      if (!response) {
-        toast.error("Database connection error")
-        return
-      }
-      console.log(error)
-      toast.error(response.data.message)
-    }
-  }
+    };
+
+    handleClerkAuth();
+  }, [clerkUser, isSignedIn, useAuthlogin]);
 
   const [currentIndex, setCurrentIndex] = useState(0)
   const { isAuthenticated } = useAuth()
@@ -104,12 +122,6 @@ const Landing = () => {
     "Communication Tools": "w-full sm:w-[80%] h-[240px] object-cover shadow-lg rounded-2xl",
     Chatbot: "w-full sm:w-[80%] h-[240px] object-cover shadow-lg rounded-2xl",
   }
-
-  useEffect(() => {
-    if (clerkUser.user) {
-      clerkLogin()
-    }
-  }, [clerkUser.user])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -194,14 +206,14 @@ const Landing = () => {
             <Button variant="link">Watch Tutorial</Button>
           </a>
            
-          <a href='/buildguild.apk' className="flex items-center gap-2">
-          <img src={android} alt="" className="size-8" />
+          <a href='/buildguild.apk' className="items-center gap-2 hidden md:flex">
+          <img src={android} alt="" className="size-8 " />
             <Button className="p-0" variant="link">Download App</Button>
           </a>
           
         </motion.div>
         </div>
-        <div>
+        <div className="hidden md:block">
           <img src={app} alt="" className="absolute top-24 scale-[1.35] rotate-6 -right-12 w-[500px]"/>
         </div>
         
@@ -281,156 +293,178 @@ const Landing = () => {
     </section>
 
     <section className="py-16 px-4 sm:px-6 lg:px-8 font-roboto-condensed">
-  <div className="max-w-7xl mx-auto">
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
-      {/* Individual Plan */}
-      <div className="relative bg-gradient-to-b from-red-50 to-white rounded-2xl p-8 shadow-lg">
-        <h3 className="text-2xl font-medium">Free</h3>
-        <div className="mt-4">
-          <p className="text-sm text-gray-600">Starts at</p>
-          <div className="flex items-baseline mt-2">
-            <span className="text-5xl font-bold tracking-tight">₹0</span>
-            <span className="ml-2 text-gray-600">per month/user</span>
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">Simple, Transparent Pricing</h2>
+          <p className="text-xl text-gray-600">Choose the perfect plan for your construction needs</p>
+        </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
+          {/* Free Plan */}
+          <div className="relative bg-gradient-to-b from-red-50 to-white rounded-2xl p-8 shadow-lg">
+            <h3 className="text-2xl font-medium">Free</h3>
+            <div className="mt-4">
+              <p className="text-sm text-gray-600">Perfect for</p>
+              <div className="flex items-baseline mt-2">
+                <span className="text-5xl font-bold tracking-tight">₹0</span>
+                <span className="ml-2 text-gray-600">/month</span>
+              </div>
+              <p className="text-sm text-gray-600 mt-1">For individual contractors and small projects</p>
+            </div>
+            <Button className="mt-8 w-full" variant="outline">
+              Get Started
+            </Button>
+            <div className="mt-8">
+              <h4 className="text-lg font-medium">Core Features</h4>
+              <ul className="mt-6 space-y-4">
+                <li className="flex items-start">
+                  <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
+                  <span className="ml-3 text-gray-600">Single Project Management</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
+                  <span className="ml-3 text-gray-600">Basic Field Reporting</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
+                  <span className="ml-3 text-gray-600">Simple Budget Tracking</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
+                  <span className="ml-3 text-gray-600">Basic Document Management</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
+                  <span className="ml-3 text-gray-600">Mobile App Access</span>
+                </li>
+                <li className="flex items-start">
+                  <Plus className="h-6 w-6 text-red-500 flex-shrink-0 rotate-45" />
+                  <span className="ml-3 text-gray-600">Advanced Analytics</span>
+                </li>
+                <li className="flex items-start">
+                  <Plus className="h-6 w-6 text-red-500 flex-shrink-0 rotate-45" />
+                  <span className="ml-3 text-gray-600">Team Collaboration</span>
+                </li>
+                <li className="flex items-start">
+                  <Plus className="h-6 w-6 text-red-500 flex-shrink-0 rotate-45" />
+                  <span className="ml-3 text-gray-600">Priority Support</span>
+                </li>
+              </ul>
+            </div>
           </div>
-        </div>
-        <p className="mt-6 text-gray-600">
-          Good for individuals who are just starting out and simply want the essentials.
-        </p>
-        <Button className="mt-8 w-full" variant="outline">
-          Get started
-        </Button>
-        <div className="mt-8">
-          <h4 className="text-lg font-medium">Free, forever</h4>
-          <ul className="mt-6 space-y-4">
-            <li className="flex items-start">
-              <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
-              <span className="ml-3 text-gray-600">1 Project</span>
-            </li>
-            <li className="flex items-start">
-              <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
-              <span className="ml-3 text-gray-600">Unlimited Data</span>
-            </li>
-            <li className="flex items-start">
-              <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
-              <span className="ml-3 text-gray-600">Unlimited event types</span>
-            </li>
-            <li className="flex items-start">
-              <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
-              <span className="ml-3 text-gray-600">Workflows</span>
-            </li>
-            <li className="flex items-start">
-              <Plus className="h-6 w-6 text-red-500 flex-shrink-0 rotate-45" />
-              <span className="ml-3 text-gray-600">24/7 Email, Chat and Phone support</span>
-            </li>
-            <li className="flex items-start"> 
-              <Plus className="h-6 w-6 text-red-500 flex-shrink-0 rotate-45" />
-              <span className="ml-3 text-gray-600">Advanced Analysis</span>
-            </li>
-          </ul>
-        </div>
-      </div>
 
-      {/* Teams Plan */}
-      <div className="relative bg-gradient-to-b from-blue-50 to-white rounded-2xl p-8 shadow-lg">
-        <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-          <span className="bg-black text-white px-4 py-1 rounded-full text-sm">
-            30 days free trial
-          </span>
-        </div>
-        <h3 className="text-2xl font-medium">Premium</h3>
-        <div className="mt-4">
-          <p className="text-sm text-gray-600">Starts at</p>
-          <div className="flex items-baseline mt-2">
-            <span className="text-5xl font-bold tracking-tight">₹899</span>
-            <span className="ml-2 text-gray-600">per month/user</span>
+          {/* Premium Plan */}
+          <div className="relative bg-gradient-to-b from-blue-50 to-white rounded-2xl p-8 shadow-lg">
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+              <span className="bg-black text-white px-4 py-1 rounded-full text-sm">
+                Most Popular
+              </span>
+            </div>
+            <h3 className="text-2xl font-medium">Premium</h3>
+            <div className="mt-4">
+              <p className="text-sm text-gray-600">Best for</p>
+              <div className="flex items-baseline mt-2">
+                <span className="text-5xl font-bold tracking-tight">₹899</span>
+                <span className="ml-2 text-gray-600">/month</span>
+              </div>
+              <p className="text-sm text-gray-600 mt-1">For growing construction companies</p>
+            </div>
+            <Button className="mt-8 w-full">
+              Start Free Trial
+            </Button>
+            <div className="mt-8">
+              <h4 className="text-lg font-medium">Everything in Free, plus:</h4>
+              <ul className="mt-6 space-y-4">
+                <li className="flex items-start">
+                  <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
+                  <span className="ml-3 text-gray-600">Up to 5 Projects</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
+                  <span className="ml-3 text-gray-600">Advanced Field Reporting</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
+                  <span className="ml-3 text-gray-600">Detailed Budget Analysis</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
+                  <span className="ml-3 text-gray-600">Team Collaboration Tools</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
+                  <span className="ml-3 text-gray-600">Advanced Document Management</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
+                  <span className="ml-3 text-gray-600">Basic Analytics & Reports</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
+                  <span className="ml-3 text-gray-600">Email & Chat Support</span>
+                </li>
+                <li className="flex items-start">
+                  <Plus className="h-6 w-6 text-red-500 flex-shrink-0 rotate-45" />
+                  <span className="ml-3 text-gray-600">Custom Integrations</span>
+                </li>
+              </ul>
+            </div>
           </div>
-        </div>
-        <p className="mt-6 text-gray-600">
-          Highly recommended for small teams who seek to upgrade their time & perform.
-        </p>
-        <Button className="mt-8 w-full">
-          Get started
-        </Button>
-        <div className="mt-8">
-          <h4 className="text-lg font-medium">Free plan features, plus:</h4>
-          <ul className="mt-6 space-y-4">
-            <li className="flex items-start">
-              <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
-              <span className="ml-3 text-gray-600">1 team</span>
-            </li>
-            <li className="flex items-start">
-              <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
-              <span className="ml-3 text-gray-600">Schedule meetings as a team</span>
-            </li>
-            <li className="flex items-start">
-              <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
-              <span className="ml-3 text-gray-600">Round-Robin, Fixed Round-Robin</span>
-            </li>
-            <li className="flex items-start">
-              <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
-              <span className="ml-3 text-gray-600">Collective Events</span>
-            </li>
-            <li className="flex items-start">
-            <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
-            <span className="ml-3 text-gray-600">24/7 Email, Chat and Phone support</span>
-            </li>
-            <li className="flex items-start">
-            <Plus className="h-6 w-6 text-red-500 flex-shrink-0 rotate-45" />
-            <span className="ml-3 text-gray-600">Advanced Analysis</span>
-            </li>
-          </ul>
-        </div>
-      </div>
 
-      {/* Enterprise Plan */}
-      <div className="relative bg-gradient-to-b from-cyan-50 to-white rounded-2xl p-8 shadow-lg">
-        <h3 className="text-2xl font-medium">Express</h3>
-        <div className="mt-4">
-          <p className="text-sm text-gray-600">Starts at</p>
-          <div className="flex items-baseline mt-2">
-            <span className="text-5xl font-bold tracking-tight">₹1799</span>
-            <span className="ml-2 text-gray-600">per year</span>
+          {/* Enterprise Plan */}
+          <div className="relative bg-gradient-to-b from-cyan-50 to-white rounded-2xl p-8 shadow-lg">
+            <h3 className="text-2xl font-medium">Enterprise</h3>
+            <div className="mt-4">
+              <p className="text-sm text-gray-600">For</p>
+              <div className="flex items-baseline mt-2">
+                <span className="text-5xl font-bold tracking-tight">₹1799</span>
+                <span className="ml-2 text-gray-600">/month</span>
+              </div>
+              <p className="text-sm text-gray-600 mt-1">For large construction firms</p>
+            </div>
+            <Button className="mt-8 w-full" variant="outline">
+              Contact Sales
+            </Button>
+            <div className="mt-8">
+              <h4 className="text-lg font-medium">Everything in Premium, plus:</h4>
+              <ul className="mt-6 space-y-4">
+                <li className="flex items-start">
+                  <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
+                  <span className="ml-3 text-gray-600">Unlimited Projects</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
+                  <span className="ml-3 text-gray-600">Custom Field Reports</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
+                  <span className="ml-3 text-gray-600">Advanced Financial Analytics</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
+                  <span className="ml-3 text-gray-600">Custom Workflows</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
+                  <span className="ml-3 text-gray-600">Advanced Team Management</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
+                  <span className="ml-3 text-gray-600">Custom Integrations</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
+                  <span className="ml-3 text-gray-600">24/7 Priority Support</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
+                  <span className="ml-3 text-gray-600">Dedicated Account Manager</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
-        <p className="mt-6 text-gray-600">
-          Robust scheduling for larger teams looking to have more control, privacy & security.
-        </p>
-        <Button className="mt-8 w-full" variant="outline">
-          Contact us
-        </Button>
-        <div className="mt-8">
-          <h4 className="text-lg font-medium">Organization plan features, plus:</h4>
-          <ul className="mt-6 space-y-4">
-            <li className="flex items-start">
-              <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
-              <span className="ml-3 text-gray-600">1 parent team and unlimited sub-teams</span>
-            </li>
-            <li className="flex items-start">
-              <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
-              <span className="ml-3 text-gray-600">Organization workflows</span>
-            </li>
-            <li className="flex items-start">
-              <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
-              <span className="ml-3 text-gray-600">Insights - analyze your booking data</span>
-            </li>
-            <li className="flex items-start">
-              <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
-              <span className="ml-3 text-gray-600">Active directory sync</span>
-            </li>
-            <li className="flex items-start">
-              <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0" />
-              <span className="ml-3 text-gray-600">24/7 Email, Chat and Phone support</span>
-            </li>
-            <li className="flex items-start">
-              <CheckIcon className="h-6 w-6 text-green-500 flex-shrink-0 " />
-              <span className="ml-3 text-gray-600">Advanced Analysis</span>
-            </li>
-          </ul>
-        </div>
       </div>
-    </div>
-  </div>
-</section>
+    </section>
 
       <section ref={aboutRef} className="font-roboto-condensed">
       <div>
@@ -600,78 +634,212 @@ const Landing = () => {
         </motion.div>
       </div>
     </section>
-      <motion.section ref={contactRef} 
-      initial={{ scale: 0.9, y: -200 }}
-      whileInView={{ scale: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="flex flex-col md:flex-row justify-between p-8 bg-gray-100 text-black"
-    >
-      <div className="md:w-1/2 mb-8 md:mb-0">
-        <h2 className="text-3xl font-bold mb-6">Contact Us</h2>
-        <p className="mb-8 text-lg">
-          Contact us for expert assistance with all your construction management
-          needs.
-        </p>
-
-        <div className="mb-6 flex items-center">
-          <div className="bg-black p-3 rounded-full mr-4">
-            <GrMapLocation className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <p className="text-lg">Nashik, Maharashtra, India</p>
-          </div>
-        </div>
-
-        <div className="mb-6 flex items-center">
-          <div className="bg-black p-3 rounded-full mr-4">
-            <GrPhone className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <p className="text-lg">(+91) 9031138044</p>
-          </div>
-        </div>
-
-        <div className="flex items-center">
-          <div className="bg-black p-3 rounded-full mr-4">
-            <GrMail className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <p className="text-lg">buildguild@gmail.com</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="md:w-1/2 bg-gradient-to-br from-black to-gray-800 text-white p-8 rounded-lg shadow-lg">
-        <h3 className="text-2xl font-semibold mb-6 text-center">
-          Get in Touch
-        </h3>
-        <form className="flex flex-col space-y-5">
-          <input
-            type="text"
-            placeholder="Name"
-            className="p-4 rounded-lg bg-gray-200 text-black focus:ring-2  transition duration-200 ease-in-out outline-none"
-            required
-          />
-          <input
-            type="email"
-            placeholder="Email"
-            className="p-4 rounded-lg bg-gray-200 text-black outline-none"
-            required
-          />
-          <textarea
-            placeholder="Message"
-            className="p-4 rounded-lg bg-gray-200 text-black outline-none"
-            required
-          />
-          <button
-            type="submit"
-            className="w-full py-3 bg-gradient-to-r from-gray-900 to-black text-white text-lg font-semibold rounded-lg shadow-md hover:from-gray-800 hover:to-gray-700 "
+      <motion.section 
+        ref={contactRef} 
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50 to-white"
+      >
+        <div className="max-w-7xl mx-auto">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-16"
           >
-            Send Message
-          </button>
-        </form>
-      </div>
-    </motion.section>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Get in Touch</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Have questions or need assistance? We're here to help. Reach out to us through any of the channels below.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            {/* Contact Information */}
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="space-y-8"
+            >
+              <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                <h3 className="text-2xl font-semibold text-gray-900 mb-6">Contact Information</h3>
+                <div className="space-y-6">
+                  <motion.a
+                    href="https://maps.google.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{ scale: 1.02 }}
+                    className="flex items-start space-x-4 p-4 rounded-xl hover:bg-gray-50 transition-all duration-300"
+                  >
+                    <div className="bg-blue-50 p-3 rounded-lg">
+                      <GrMapLocation className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-900">Our Location</h4>
+                      <p className="text-gray-600 mt-1">Nashik, Maharashtra, India</p>
+                    </div>
+                  </motion.a>
+
+                  <motion.a
+                    href="tel:+919031138044"
+                    whileHover={{ scale: 1.02 }}
+                    className="flex items-start space-x-4 p-4 rounded-xl hover:bg-gray-50 transition-all duration-300"
+                  >
+                    <div className="bg-green-50 p-3 rounded-lg">
+                      <GrPhone className="w-6 h-6 text-green-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-900">Phone Number</h4>
+                      <p className="text-gray-600 mt-1">(+91) 9031138044</p>
+                    </div>
+                  </motion.a>
+
+                  <motion.a
+                    href="mailto:buildguild@gmail.com"
+                    whileHover={{ scale: 1.02 }}
+                    className="flex items-start space-x-4 p-4 rounded-xl hover:bg-gray-50 transition-all duration-300"
+                  >
+                    <div className="bg-purple-50 p-3 rounded-lg">
+                      <GrMail className="w-6 h-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-900">Email Address</h4>
+                      <p className="text-gray-600 mt-1">buildguild@gmail.com</p>
+                    </div>
+                  </motion.a>
+                </div>
+
+                <div className="mt-8 pt-8 border-t border-gray-100">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Follow Us</h4>
+                  <div className="flex space-x-4">
+                    <motion.a
+                      href="https://linkedin.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      whileHover={{ scale: 1.1, y: -2 }}
+                      className="p-3 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                    >
+                      <BiLogoLinkedinSquare className="w-6 h-6" />
+                    </motion.a>
+                    <motion.a
+                      href="https://twitter.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      whileHover={{ scale: 1.1, y: -2 }}
+                      className="p-3 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-400 transition-colors"
+                    >
+                      <GrTwitter className="w-6 h-6" />
+                    </motion.a>
+                    <motion.a
+                      href="https://github.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      whileHover={{ scale: 1.1, y: -2 }}
+                      className="p-3 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-800 hover:text-white transition-colors"
+                    >
+                      <SiGithub className="w-6 h-6" />
+                    </motion.a>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                <h3 className="text-2xl font-semibold text-gray-900 mb-4">Office Hours</h3>
+                <div className="space-y-3 text-gray-600">
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="font-medium">Monday - Friday</span>
+                    <span>9:00 AM - 6:00 PM</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="font-medium">Saturday</span>
+                    <span>10:00 AM - 4:00 PM</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="font-medium">Sunday</span>
+                    <span className="text-red-500">Closed</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Contact Form */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="bg-gradient-to-br from-gray-900 to-black rounded-2xl shadow-xl p-8 text-white"
+            >
+              <h3 className="text-2xl font-semibold mb-6">Send us a Message</h3>
+              <form className="space-y-6">
+                <div className="space-y-2">
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-200">
+                    Your Name
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    placeholder="John Doe"
+                    className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-200">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    placeholder="john@example.com"
+                    className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="subject" className="block text-sm font-medium text-gray-200">
+                    Subject
+                  </label>
+                  <input
+                    type="text"
+                    id="subject"
+                    placeholder="How can we help?"
+                    className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="message" className="block text-sm font-medium text-gray-200">
+                    Message
+                  </label>
+                  <textarea
+                    id="message"
+                    rows="4"
+                    placeholder="Your message here..."
+                    className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
+                    required
+                  ></textarea>
+                </div>
+
+                <motion.button
+                  type="submit"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full py-4 px-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-lg shadow-lg hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-200"
+                >
+                  Send Message
+                </motion.button>
+              </form>
+            </motion.div>
+          </div>
+        </div>
+      </motion.section>
+
+      {/* Add Footer at the bottom */}
+      <Footer />
     </div>
   )
 }
