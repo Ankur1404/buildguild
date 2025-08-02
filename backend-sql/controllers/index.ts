@@ -1,9 +1,9 @@
 import { Router } from "express";
 
-import test from "./test";
+import users from "./users";
 
 let router = Router();
 
-router.use("/test", test);
+router.use("/users", users);
 
 export default router;
